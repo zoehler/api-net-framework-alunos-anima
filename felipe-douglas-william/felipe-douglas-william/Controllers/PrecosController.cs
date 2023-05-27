@@ -1,4 +1,4 @@
-﻿using felipe_douglas_william.Models;
+﻿using Negocio.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,16 +20,16 @@ namespace felipe_douglas_william.Controllers
 
         // GET api/precos/{id}
         public Preco Get(int id) 
-        { 
-            return precos.FirstOrDefault(p => p.Id == id);
+        {
+            return Preco.GetById(id);
         }
         
 
         // POST api/precos
         public HttpResponseMessage Post(Preco preco) 
-        { 
-            preco.Id = GenerateId();
-            precos.Add(preco); 
+        {
+            preco.Salvar();
+
             var response = Request.CreateResponse(HttpStatusCode.Created, preco); 
             response.Headers.Location = new Uri(Request.RequestUri + "/" + preco.Id); return response; 
         } 
@@ -37,12 +37,10 @@ namespace felipe_douglas_william.Controllers
         // PUT api/precos/{id}
         public HttpResponseMessage Put(int id, Preco preco) 
         { 
-            var existingPreco = precos.FirstOrDefault(p => p.Id == id);
+            var existingPreco = Preco.GetById(id); ;
             if (existingPreco != null) 
-            { 
-                existingPreco.ProdutoId = preco.ProdutoId; 
-                existingPreco.Valor = preco.Valor; 
-                existingPreco.Data = preco.Data;
+            {
+                preco.Salvar();
                 return Request.CreateResponse(HttpStatusCode.OK); 
             } 
             else 
@@ -54,10 +52,10 @@ namespace felipe_douglas_william.Controllers
         // DELETE api/precos/{id}
         public HttpResponseMessage Delete(int id) 
         { 
-            var preco = precos.FirstOrDefault(p => p.Id == id); 
-            if (preco != null) 
-            { 
-                precos.Remove(preco);
+            var preco = Preco.GetById(id);
+            if (preco != null)
+            {
+                Produto.Excluir(id);
                 return Request.CreateResponse(HttpStatusCode.OK); 
             }
             else 
@@ -65,10 +63,5 @@ namespace felipe_douglas_william.Controllers
                 return Request.CreateErrorResponse(HttpStatusCode.NotFound, "Preço not found.");
             }
         } 
-
-        private int GenerateId() 
-        { 
-            return precos.Count > 0 ? precos.Max(p => p.Id) + 1 : 1; 
-        }
     }
 }
