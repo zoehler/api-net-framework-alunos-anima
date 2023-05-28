@@ -1,0 +1,112 @@
+﻿<main>
+    <div id="app">
+        <h1>Produtos</h1>
+
+        <!-- Formulário para cadastro e edição de produtos -->
+        <form v-on:submit.prevent="saveProduto">
+            <label for="nome">Nome:</label>
+            <input type="text" id="nome" v-model="produto.Nome" required class="form-control">
+
+            <label for="descricao">Descrição:</label>
+            <input type="text" id="descricao" v-model="produto.Descricao" required class="form-control">
+
+            <button type="submit" class="btn btn-primary mt-2">{{ editar ? 'Salvar' : 'Cadastrar' }}</button>
+        </form>
+
+        <hr>
+
+        <!-- Tabela listando todos os produtos cadastrados -->
+        <table class="table table-striped">
+            <tr>
+                <th>Nome</th>
+                <th>Descrição</th>
+                <th>Ações</th>
+            </tr>
+            <tr v-for="produto in produtos" :key="produto.Id">
+                <td>{{ produto.Nome }}</td>
+                <td>{{ produto.Descricao }}</td>
+                <td>
+                    <button v-on:click="editProduto(produto)" class="btn btn-secondary btn-sm ms-2">Editar</button>
+                    <!-- <a :href="'/Precos/Index/' + produto.Id" class="btn btn-success btn-sm ms-2">Preços</a> -->
+                    <button v-on:click="deleteProduto(produto.Id)" class="btn btn-danger btn-sm ms-2">Excluir</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    produtos: [],
+                    produto: {
+                        id: null,
+                        nome: '',
+                        descricao: ''
+                    },
+                    editar: false
+                };
+            },
+            created() {
+                this.getProdutos();
+            },
+            methods: {
+                getProdutos() {
+                    axios.get('@ViewBag.ApiUrl/api/produtos')
+                        .then(response => {
+                            this.produtos = response.data;
+                        })
+                        .catch(error => {
+                            console.error(error);
+                        });
+                },
+                saveProduto() {
+                    if (this.editar) {
+                        axios.put('@ViewBag.ApiUrl/api/produtos/' + this.produto.Id, this.produto)
+                            .then(response => {
+                                this.resetForm();
+                                this.getProdutos();
+                            })
+                            .catch(error => {
+                                console.error(error);
+                            });
+                    } else {
+                        axios.post('@ViewBag.ApiUrl/api/produtos', this.produto)
+                            .then(response => {
+                                this.resetForm();
+                                this.getProdutos();
+                            })
+                            .catch(error => {
+                                console.error(error);
+                            });
+                    }
+                },
+                editProduto(produto) {
+                    this.produto.Id = produto.Id;
+                    this.produto.Nome = produto.Nome;
+                    this.produto.Descricao = produto.Descricao;
+                    this.editar = true;
+                },
+                deleteProduto(id) {
+                    if (confirm("Tem certeza que deseja excluir este produto?")) {
+                        axios.delete('@ViewBag.ApiUrl/api/produtos/' + id)
+                            .then(response => {
+                                this.getProdutos();
+                            })
+                            .catch(error => {
+                                console.error(error);
+                            });
+                    }
+                },
+                resetForm() {
+                    this.produto.Id = null;
+                    this.produto.Nome = '';
+                    this.produto.Descricao = '';
+                    this.editar = false;
+                }
+            }
+        });
+
+        app.mount('#app');
+    </script>
+</main>
